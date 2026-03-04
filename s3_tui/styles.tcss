@@ -1,0 +1,163 @@
+Screen {
+  layout: vertical;
+  background: #0d1117;
+  color: #d4d4d4;
+}
+
+* {
+  scrollbar-background: #0f141b;
+  scrollbar-color: #324154;
+  scrollbar-color-hover: #3e5470;
+  scrollbar-color-active: #7aa2f7;
+}
+
+Header {
+  background: #111826;
+  color: #7aa2f7;
+  text-style: bold;
+}
+
+HeaderClock {
+  color: #89ddff;
+}
+
+Footer {
+  background: #111826;
+  color: #aab7c5;
+}
+
+FooterKey {
+  background: #1a2330;
+  color: #7aa2f7;
+  text-style: bold;
+}
+
+FooterDescription {
+  color: #c5d1de;
+}
+
+#root {
+  height: 1fr;
+}
+
+#panes {
+  height: 2fr;
+  background: #0d1117;
+}
+
+Container {
+  background: #11161d;
+  color: #d4d4d4;
+}
+
+Static {
+  color: #d4d4d4;
+}
+
+.pane {
+  width: 1fr;
+  border: round #3c4a5a;
+  margin: 0 1;
+  background: #11161d;
+}
+
+.pane_path {
+  padding: 0 1;
+  background: #1a2330;
+  color: #7aa2f7;
+  text-style: bold;
+}
+
+#search_input {
+  margin: 0 1;
+  background: #0f1722;
+  border: round #3c4a5a;
+  color: #d4d4d4;
+}
+
+#search_input:focus {
+  border: round #7aa2f7;
+}
+
+.search_hint {
+  height: 1;
+  padding: 0 1;
+  color: #89ddff;
+}
+
+DataTable {
+  height: 1fr;
+  background: #11161d;
+  color: #d4d4d4;
+  border: heavy #2b3d54;
+}
+
+DataTable .datatable--header {
+  background: #1a2330;
+  color: #89ddff;
+  text-style: bold;
+}
+
+DataTable .datatable--odd-row {
+  background: #11161d;
+  color: #d4d4d4;
+}
+
+DataTable .datatable--even-row {
+  background: #0f141b;
+  color: #d4d4d4;
+}
+
+DataTable .datatable--cursor {
+  background: #ffd866;
+  color: #0f141b;
+  text-style: bold;
+}
+
+DataTable .datatable--highlight {
+  background: #1d2a3a;
+  color: #dbe7f3;
+}
+
+DataTable:focus .datatable--cursor {
+  background: #ffcc33;
+  color: #0b0f14;
+  text-style: bold reverse;
+}
+
+.info_panel {
+  height: 1fr;
+  padding: 1 1;
+  color: #c5d1de;
+}
+
+#preview_wrap {
+  height: 1fr;
+  border: round #3c4a5a;
+  margin: 0 1 1 1;
+  background: #11161d;
+}
+
+#preview_title {
+  padding: 0 1;
+  background: #1a2330;
+  color: #7aa2f7;
+  text-style: bold;
+}
+
+#preview {
+  height: 1fr;
+  color: #c3e88d;
+  background: #0f141b;
+  border: none;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+#preview_table {
+  display: none;
+  height: 1fr;
+  background: #0f141b;
+  color: #d4d4d4;
+  border: none;
+}
