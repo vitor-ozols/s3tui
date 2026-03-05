@@ -11,6 +11,7 @@ Python TUI to explore S3 in a commander-style layout, focused on navigation plus
   - CSV
   - JSON / JSONL / NDJSON
   - Parquet
+  - images (PNG, JPG, JPEG, GIF, BMP, WEBP, TIFF) up to 400x400
   - text files (txt, log, md, etc.)
 - Download to `./downloads/<bucket>/<key>`
 - File delete
@@ -39,11 +40,11 @@ poetry run s3tui
 - `BACKSPACE`: go up one level
 - `P`: preview selected file
 - `D`: download selected file
+- `U`: open upload picker (file or folder)
 - `DELETE`: delete selected file
 - `R`: refresh listing
 - `Q`: quit
 
 ## Notes
 
-- In this layout, the right pane is informational only.
 - `Copy` and `Move` are currently disabled because there is no destination pane.

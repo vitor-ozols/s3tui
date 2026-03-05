@@ -86,6 +86,21 @@ class S3Service:
         destination.parent.mkdir(parents=True, exist_ok=True)
         self.client.download_file(bucket, key, str(destination))
 
+    def upload_file(self, bucket: str, key: str, source: Path) -> None:
+        self.client.upload_file(str(source), bucket, key)
+
+    def upload_directory(self, bucket: str, source_dir: Path, prefix: str = "") -> int:
+        uploaded = 0
+        base_prefix = prefix.rstrip("/")
+        for file_path in source_dir.rglob("*"):
+            if not file_path.is_file():
+                continue
+            relative = file_path.relative_to(source_dir).as_posix()
+            key = f"{base_prefix}/{relative}" if base_prefix else relative
+            self.upload_file(bucket, key, file_path)
+            uploaded += 1
+        return uploaded
+
     def copy(self, src_bucket: str, src_key: str, dst_bucket: str, dst_key: str) -> None:
         source = {"Bucket": src_bucket, "Key": src_key}
         self.client.copy_object(Bucket=dst_bucket, Key=dst_key, CopySource=source)

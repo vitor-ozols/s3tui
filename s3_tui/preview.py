@@ -24,6 +24,21 @@ TEXT_EXTENSIONS = {
     ".css",
 }
 
+IMAGE_EXTENSIONS = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".tiff",
+    ".tif",
+}
+
+
+def is_image_file(filename: str) -> bool:
+    return Path(filename).suffix.lower() in IMAGE_EXTENSIONS
+
 
 def _df_preview(df: pd.DataFrame, max_rows: int = 500) -> str:
     shown = df.head(max_rows)
@@ -31,10 +46,12 @@ def _df_preview(df: pd.DataFrame, max_rows: int = 500) -> str:
 
 
 def _df_to_table(df: pd.DataFrame, max_rows: int = 500) -> tuple[list[str], list[list[str]]]:
-    shown = df.head(max_rows).copy()
-    shown = shown.fillna("")
+    shown = df.head(max_rows)
     columns = [str(col) for col in shown.columns]
-    rows = [[str(value) for value in row] for row in shown.to_records(index=False).tolist()]
+    rows = [
+        ["" if pd.isna(value) else str(value) for value in row]
+        for row in shown.itertuples(index=False, name=None)
+    ]
     return columns, rows
 
 
