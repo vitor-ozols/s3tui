@@ -28,11 +28,13 @@ class S3TUI(ExplorerMixin, PreviewMixin, App[None]):
         Binding("shift+up", "preview_page_up", "Preview Up"),
         Binding("shift+left", "preview_scroll_left", "Preview Left"),
         Binding("shift+right", "preview_scroll_right", "Preview Right"),
-        Binding("d", "download_selected", "Download"),
+        Binding("shift+d", "download_selected", "Download"),
+        Binding("n", "create_directory", "New Dir"),
         Binding("u", "upload_selected", "Upload"),
         Binding("c", "copy_selected", "Copy"),
         Binding("m", "move_selected", "Move"),
-        Binding("delete", "delete_selected", "Delete"),
+        Binding("d", "delete_selected", "Delete"),
+        Binding("delete", "delete_selected", show=False),
         Binding("r", "refresh", "Refresh"),
         Binding("t", "toggle_theme", "Theme", show=False),
         Binding("q", "quit", "Quit"),
@@ -59,7 +61,11 @@ class S3TUI(ExplorerMixin, PreviewMixin, App[None]):
                 with Container(classes="pane"):
                     yield Static("Selected item details", id="right_path", classes="pane_path")
                     yield Static("No item selected.", id="right_info", classes="info_panel")
-                    yield Button("Upload", id="upload_btn", variant="primary")
+                    with Horizontal(id="action_buttons"):
+                        yield Button("New Dir", id="new_dir_btn", classes="flat-button")
+                        yield Button("Upload", id="upload_btn", classes="flat-button")
+                        yield Button("Move", id="move_btn", classes="flat-button")
+                        yield Button("Delete", id="delete_btn", classes="flat-button")
             with Container(id="preview_wrap"):
                 yield Static("Preview", id="preview_title")
                 yield DataTable(id="preview_table", cursor_type="cell")
@@ -117,8 +123,14 @@ class S3TUI(ExplorerMixin, PreviewMixin, App[None]):
             event.stop()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "upload_btn":
+        if event.button.id == "new_dir_btn":
+            self.action_create_directory()
+        elif event.button.id == "upload_btn":
             self.action_upload_selected()
+        elif event.button.id == "move_btn":
+            self.action_move_selected()
+        elif event.button.id == "delete_btn":
+            self.action_delete_selected()
 
 
 def main() -> None:

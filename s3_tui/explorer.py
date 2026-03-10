@@ -8,6 +8,9 @@ from textual.css.query import NoMatches
 from textual.events import Key
 from textual.widgets import DataTable, Input
 
+from s3_tui.create_directory import CreateDirectoryScreen
+from s3_tui.delete_confirm import DeleteConfirmScreen
+from s3_tui.move_picker import MovePickerScreen, MoveTarget
 from s3_tui.s3_service import S3Entry
 from s3_tui.upload_picker import UploadPickerScreen
 
@@ -236,6 +239,32 @@ class ExplorerMixin:
 
         self.push_screen(UploadPickerScreen(Path.home()), self._on_upload_picked)
 
+    def action_create_directory(self) -> None:
+        if self.left.mode != "objects" or self.left.bucket is None:
+            self._log("Create directory unavailable: select a bucket/path in pane 1 first.")
+            return
+
+        current_path = f"s3://{self.left.bucket}/{self.left.prefix or ''}"
+        self.push_screen(CreateDirectoryScreen(current_path), self._on_create_directory_picked)
+
+    def _on_create_directory_picked(self, directory_name: str | None) -> None:
+        if directory_name is None or self.left.bucket is None:
+            self._log("Create directory cancelled.")
+            return
+
+        normalized_name = directory_name.strip().strip("/")
+        if not normalized_name:
+            self._log("Create directory failed: name cannot be empty.")
+            return
+
+        prefix = f"{self.left.prefix or ''}{normalized_name}/"
+        try:
+            self.service.create_directory(self.left.bucket, prefix)
+            self._refresh_left()
+            self._log(f"Created directory: s3://{self.left.bucket}/{prefix}")
+        except Exception as error:
+            self._log(f"Create directory failed: {error}")
+
     def _on_upload_picked(self, selected_path: Path | None) -> None:
         if selected_path is None:
             return
@@ -268,17 +297,79 @@ class ExplorerMixin:
         self._log("Copy is disabled in this layout (right panel = details).")
 
     def action_move_selected(self) -> None:
-        self._log("Move is disabled in this layout (right panel = details).")
+        entry = self._selected_entry()
+        if not entry or entry.kind not in {"file", "dir"} or self.left.bucket is None:
+            return
+
+        self.push_screen(
+            MovePickerScreen(self.service, self._entry_uri(entry)),
+            lambda target: self._on_move_target_picked(entry, target),
+        )
+
+    def _on_move_target_picked(self, entry: S3Entry, target: MoveTarget | None) -> None:
+        if target is None or self.left.bucket is None:
+            self._log("Move cancelled.")
+            return
+
+        source_bucket = self.left.bucket
+        if entry.kind == "dir":
+            target_prefix = f"{target.prefix}{entry.name}/"
+            source_prefix = entry.key
+            if source_bucket == target.bucket and source_prefix == target_prefix:
+                self._log("Move skipped: source and destination are the same.")
+                return
+            if target.bucket == source_bucket and target_prefix.startswith(source_prefix):
+                self._log("Move failed: destination cannot be inside the same directory.")
+                return
+            try:
+                moved_count = self.service.move_prefix(source_bucket, source_prefix, target.bucket, target_prefix)
+                self._refresh_left()
+                self._log(
+                    f"Moved directory: s3://{source_bucket}/{source_prefix} -> "
+                    f"s3://{target.bucket}/{target_prefix} ({moved_count} objects)"
+                )
+            except Exception as error:
+                self._log(f"Move failed: {error}")
+            return
+
+        target_key = f"{target.prefix}{entry.name}"
+        if source_bucket == target.bucket and entry.key == target_key:
+            self._log("Move skipped: source and destination are the same.")
+            return
+        try:
+            self.service.move(source_bucket, entry.key, target.bucket, target_key)
+            self._refresh_left()
+            self._log(f"Moved object: s3://{source_bucket}/{entry.key} -> s3://{target.bucket}/{target_key}")
+        except Exception as error:
+            self._log(f"Move failed: {error}")
 
     def action_delete_selected(self) -> None:
         entry = self._selected_entry()
-        if not entry or entry.kind != "file" or self.left.bucket is None:
+        if not entry or entry.kind not in {"file", "dir"} or self.left.bucket is None:
+            return
+
+        target_kind = "directory" if entry.kind == "dir" else "object"
+        self.push_screen(
+            DeleteConfirmScreen(self._entry_uri(entry), target_kind),
+            lambda confirmed: self._on_delete_confirmed(entry, confirmed),
+        )
+
+    def _on_delete_confirmed(self, entry: S3Entry, confirmed: bool) -> None:
+        if not confirmed or self.left.bucket is None:
+            self._log("Delete cancelled.")
             return
 
         try:
-            self.service.delete(self.left.bucket, entry.key)
+            if entry.kind == "dir":
+                deleted_count = self.service.delete_prefix(self.left.bucket, entry.key)
+                if deleted_count == 0:
+                    self._log(f"Directory already empty or missing: s3://{self.left.bucket}/{entry.key}")
+                else:
+                    self._log(f"Deleted directory: s3://{self.left.bucket}/{entry.key} ({deleted_count} objects)")
+            else:
+                self.service.delete(self.left.bucket, entry.key)
+                self._log(f"Deleted object: s3://{self.left.bucket}/{entry.key}")
             self._refresh_left()
-            self._log(f"Deleted: s3://{self.left.bucket}/{entry.key}")
         except Exception as error:
             self._log(f"Delete failed: {error}")
 
@@ -305,7 +396,10 @@ class ExplorerMixin:
             self._apply_filter()
 
     def on_key(self, event: Key) -> None:
-        if isinstance(self.screen, UploadPickerScreen):
+        if isinstance(
+            self.screen,
+            (UploadPickerScreen, MovePickerScreen, DeleteConfirmScreen, CreateDirectoryScreen),
+        ):
             return
         if event.key == "enter":
             self.action_open_selected()

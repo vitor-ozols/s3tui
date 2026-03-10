@@ -101,9 +101,37 @@ class S3Service:
             uploaded += 1
         return uploaded
 
+    def create_directory(self, bucket: str, prefix: str) -> None:
+        normalized_prefix = prefix.rstrip("/") + "/"
+        self.client.put_object(Bucket=bucket, Key=normalized_prefix, Body=b"")
+
     def copy(self, src_bucket: str, src_key: str, dst_bucket: str, dst_key: str) -> None:
         source = {"Bucket": src_bucket, "Key": src_key}
         self.client.copy_object(Bucket=dst_bucket, Key=dst_key, CopySource=source)
+
+    def move_prefix(self, src_bucket: str, src_prefix: str, dst_bucket: str, dst_prefix: str) -> int:
+        paginator = self.client.get_paginator("list_objects_v2")
+        moved = 0
+        keys_to_delete: list[dict[str, str]] = []
+        normalized_src_prefix = src_prefix.rstrip("/") + "/"
+        normalized_dst_prefix = dst_prefix.rstrip("/") + "/"
+
+        for page in paginator.paginate(Bucket=src_bucket, Prefix=normalized_src_prefix):
+            for obj in page.get("Contents", []):
+                src_key = obj["Key"]
+                relative_key = src_key[len(normalized_src_prefix) :]
+                dst_key = f"{normalized_dst_prefix}{relative_key}" if relative_key else normalized_dst_prefix
+                self.copy(src_bucket, src_key, dst_bucket, dst_key)
+                keys_to_delete.append({"Key": src_key})
+                moved += 1
+                if len(keys_to_delete) == 1000:
+                    self.client.delete_objects(Bucket=src_bucket, Delete={"Objects": keys_to_delete})
+                    keys_to_delete = []
+
+        if keys_to_delete:
+            self.client.delete_objects(Bucket=src_bucket, Delete={"Objects": keys_to_delete})
+
+        return moved
 
     def move(self, src_bucket: str, src_key: str, dst_bucket: str, dst_key: str) -> None:
         self.copy(src_bucket, src_key, dst_bucket, dst_key)
@@ -111,6 +139,25 @@ class S3Service:
 
     def delete(self, bucket: str, key: str) -> None:
         self.client.delete_object(Bucket=bucket, Key=key)
+
+    def delete_prefix(self, bucket: str, prefix: str) -> int:
+        paginator = self.client.get_paginator("list_objects_v2")
+        deleted = 0
+        batch: list[dict[str, str]] = []
+
+        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                batch.append({"Key": obj["Key"]})
+                if len(batch) == 1000:
+                    self.client.delete_objects(Bucket=bucket, Delete={"Objects": batch})
+                    deleted += len(batch)
+                    batch = []
+
+        if batch:
+            self.client.delete_objects(Bucket=bucket, Delete={"Objects": batch})
+            deleted += len(batch)
+
+        return deleted
 
 
 class S3ServiceError(RuntimeError):

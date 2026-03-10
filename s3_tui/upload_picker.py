@@ -55,6 +55,10 @@ class UploadPickerScreen(ModalScreen[Path | None]):
         Binding("enter", "open_or_select", "Open"),
         Binding("backspace", "go_parent", "Parent"),
         Binding("u", "upload_selected", "Upload"),
+        Binding("up", "cursor_up", show=False, priority=True),
+        Binding("down", "cursor_down", show=False, priority=True),
+        Binding("left", "cursor_left", show=False, priority=True),
+        Binding("right", "cursor_right", show=False, priority=True),
         Binding("escape", "cancel", "Cancel"),
     ]
 
@@ -73,8 +77,8 @@ class UploadPickerScreen(ModalScreen[Path | None]):
             yield Static("", id="upload_status")
             yield UploadFsTable(id="upload_fs_table", cursor_type="cell")
             with Horizontal(id="upload_modal_actions"):
-                yield Button("Upload selected", id="upload_select_btn", variant="primary")
-                yield Button("Cancel", id="upload_cancel_btn", variant="error")
+                yield Button("Upload selected", id="upload_select_btn", classes="flat-button")
+                yield Button("Cancel", id="upload_cancel_btn", classes="flat-button")
 
     def on_mount(self) -> None:
         table = self.query_one("#upload_fs_table", DataTable)
@@ -177,6 +181,18 @@ class UploadPickerScreen(ModalScreen[Path | None]):
             return
         self.dismiss(selected.path)
 
+    def action_cursor_up(self) -> None:
+        self._move_upload_cursor("up")
+
+    def action_cursor_down(self) -> None:
+        self._move_upload_cursor("down")
+
+    def action_cursor_left(self) -> None:
+        self._move_upload_cursor("left")
+
+    def action_cursor_right(self) -> None:
+        self._move_upload_cursor("right")
+
     def action_cancel(self) -> None:
         self.dismiss(None)
 
@@ -212,6 +228,9 @@ class UploadPickerScreen(ModalScreen[Path | None]):
         elif event.key == "backspace":
             self.action_go_parent()
             event.stop()
+        elif event.key in {"up", "down", "left", "right"}:
+            self._move_upload_cursor(event.key)
+            event.stop()
 
     @staticmethod
     def _human_size(size: int) -> str:
@@ -222,3 +241,10 @@ class UploadPickerScreen(ModalScreen[Path | None]):
                 return f"{value:.1f} {unit}"
             value /= 1024
         return f"{size} B"
+
+    def _move_upload_cursor(self, direction: str) -> None:
+        table = self.query_one("#upload_fs_table", DataTable)
+        action = getattr(table, f"action_cursor_{direction}", None)
+        if callable(action):
+            action()
+        table.focus()

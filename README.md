@@ -14,7 +14,9 @@ Python TUI to explore S3 in a commander-style layout, focused on navigation plus
   - images (PNG, JPG, JPEG, GIF, BMP, WEBP, TIFF) up to 400x400
   - text files (txt, log, md, etc.)
 - Download to `./downloads/<bucket>/<key>`
-- File delete
+- Delete for files and directories
+- Create directories
+- Move files and directories with S3 destination picker
 
 ## Requirements
 
@@ -39,9 +41,11 @@ poetry run s3tui
 - `ENTER`: open bucket/folder or preview file
 - `BACKSPACE`: go up one level
 - `P`: preview selected file
-- `D`: download selected file
+- `Shift+D`: download selected file
+- `N`: open create-directory dialog
 - `U`: open upload picker (file or folder)
-- `DELETE`: delete selected file
+- `M`: open move dialog and choose the destination in S3
+- `D`: delete selected file or directory (asks for confirmation with `Y/N`)
 - `R`: refresh listing
 - `Q`: quit
 

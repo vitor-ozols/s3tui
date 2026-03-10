@@ -145,9 +145,90 @@ DataTable:focus .datatable--cursor {
   color: #c5d1de;
 }
 
-#upload_btn {
+#action_buttons {
+  height: 3;
+  align-horizontal: left;
   margin: 0 1 1 1;
+}
+
+#new_dir_btn,
+#upload_btn,
+#move_btn,
+#delete_btn {
   width: auto;
+  margin-right: 1;
+}
+
+.flat-button {
+  background: #1a2330;
+  border: round #2b3d54;
+  color: #89ddff;
+  text-style: bold;
+  min-width: 12;
+  padding: 0 1;
+}
+
+.flat-button:hover {
+  background: #223246;
+}
+
+.flat-button:focus {
+  background: #2a3d57;
+  border: round #89ddff;
+  color: #ffffff;
+}
+
+#delete_btn,
+#confirm_yes_btn {
+  color: #ff757f;
+}
+
+.confirm-danger {
+  background: #3a1f26;
+  border: round #ff757f;
+  color: #ff9aa2;
+}
+
+.confirm-danger:hover {
+  background: #4a2530;
+}
+
+.confirm-danger:focus {
+  background: #5b2d3a;
+  border: round #ff9aa2;
+  color: #ffffff;
+}
+
+.confirm-neutral {
+  background: #1c2733;
+  border: round #4f6b88;
+  color: #9cc6ff;
+}
+
+.confirm-neutral:hover {
+  background: #243446;
+}
+
+.confirm-neutral:focus {
+  background: #2b4057;
+  border: round #9cc6ff;
+  color: #ffffff;
+}
+
+.confirm-create {
+  background: #1d3123;
+  border: round #6ccf8a;
+  color: #9df0b5;
+}
+
+.confirm-create:hover {
+  background: #24402d;
+}
+
+.confirm-create:focus {
+  background: #2c5038;
+  border: round #9df0b5;
+  color: #ffffff;
 }
 
 #preview_wrap {
@@ -230,6 +311,109 @@ DataTable:focus .datatable--cursor {
 }
 
 #upload_modal_actions {
+  height: 3;
+  align-horizontal: right;
+  margin-top: 1;
+}
+
+#confirm_modal {
+  width: 72;
+  height: auto;
+  max-width: 90%;
+  border: round #ff757f;
+  background: #11161d;
+  padding: 1 2;
+}
+
+#confirm_modal_title {
+  color: #ff8f98;
+  text-style: bold;
+  margin-bottom: 1;
+}
+
+#confirm_modal_body {
+  color: #d4d4d4;
+  margin-bottom: 1;
+}
+
+#confirm_modal_hint {
+  color: #ffb454;
+}
+
+#confirm_modal_actions {
+  height: 3;
+  align-horizontal: right;
+  margin-top: 1;
+}
+
+#create_dir_modal {
+  width: 72;
+  height: auto;
+  max-width: 90%;
+  border: round #6ccf8a;
+  background: #11161d;
+  padding: 1 2;
+}
+
+#create_dir_modal_title {
+  color: #9df0b5;
+  text-style: bold;
+  margin-bottom: 1;
+}
+
+#create_dir_modal_path {
+  color: #c5d1de;
+  margin-bottom: 1;
+}
+
+#create_dir_input {
+  margin-bottom: 1;
+}
+
+#create_dir_modal_hint {
+  color: #ffb454;
+}
+
+#create_dir_modal_actions {
+  height: 3;
+  align-horizontal: right;
+  margin-top: 1;
+}
+
+#move_modal {
+  width: 90%;
+  height: 90%;
+  max-width: 120;
+  max-height: 42;
+  border: round #6ccf8a;
+  background: #11161d;
+  padding: 1 2;
+}
+
+#move_modal_title {
+  color: #9df0b5;
+  text-style: bold;
+}
+
+#move_modal_source {
+  color: #c5d1de;
+}
+
+#move_modal_path {
+  color: #89ddff;
+}
+
+#move_modal_status {
+  color: #ffb454;
+  margin-bottom: 1;
+}
+
+#move_table {
+  height: 1fr;
+  border: heavy #2b3d54;
+}
+
+#move_modal_actions {
   height: 3;
   align-horizontal: right;
   margin-top: 1;
