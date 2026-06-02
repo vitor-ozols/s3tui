@@ -1,0 +1,679 @@
+﻿📝 Anotações
+10 de nov. de 2025
+Daily Engenharia de Dados
+Convidados Eduardo Melo Maia Israel Maia Rios Gabriel Ferreira Vitor Ozols
+Anexos Daily Engenharia de Dados 
+Registros da reunião Transcrição 
+
+
+Resumo
+Vitor Ozols e Eduardo Melo Maia alinharam a arquitetura de integração com o Mercado Livre, decidindo que o endpoint de autorização, que redireciona para a página de consentimento, deve devolver uma URL de redirecionamento pronta com um token de segurança para validação do callback, sugerido por Eduardo Melo Maia para uso do campo `state` do Mercado Livre. A equipe discutiu vários endpoints necessários, incluindo um para o preditor de categoria, que Eduardo Melo Maia e Marco Franca concordaram em parametrizar o limite de retorno, e um para verificar se um seller já está conectado ao Mercado Livre. Gabriel Ferreira atualizou sobre o status da árvore de categorias; Luciano Mercer e Eduardo Melo Maia discutiram a necessidade de manter os dados do Mercado Livre atualizados, e Eduardo Melo Maia, junto com Marco Franca, refinou a lista final de nove itens, onde a autenticação é a prioridade número um e o preditor a segunda.
+
+
+Detalhes
+Tamanho das anotações: Padrão
+* End Point de Autorização e Fluxo de Integração O ponto de partida para a integração com o Mercado Livre é o endpoint de autorização, que redirecionará o usuário para a página de consentimento do Mercado Livre, conforme explicado por Vitor Ozols. Eduardo Melo Maia concordou que a lógica de redirecionamento deve permanecer no endpoint deles, garantindo o registro e a telemetria (00:48:26). A equipe decidiu que o endpoint deles, que receberá o partner ID do lado do aplicativo, deve devolver uma URL de redirecionamento pronta, incluindo um token de segurança gerado internamente para ser pego no callback (00:51:40).
+* Segurança e Validação de Callback Foi levantada uma preocupação de segurança sobre a URL de callback ficar exposta e a necessidade de garantir que a requisição de retorno venha do Mercado Livre (00:02:51). Eduardo Melo Maia sugeriu que o endpoint de autorização gere um hash ou token aleatório, armazenando-o e vinculando-o ao partner ID. No retorno (callback), este hash precisará ser validado. O campo `state` do Mercado Livre pode ser usado para esse fim, embora Vitor Ozols o estivesse usando inicialmente como partner ID (00:06:43).
+* Processamento de Callback e Tokens O callback (`auth/callback`) do Mercado Livre receberá parâmetros como o `state` e retornará o refresh token (00:01:19). O código de Vitor Ozols usará esse refresh token para inserir os dados na base de dados (00:02:51). O access token tem validade de 6 horas, e o código já inclui o gerenciamento da sua atualização, realizando a validação toda vez que o token for recuperado do banco para uso (00:10:39).
+* Página de Sucesso e Responsabilidades O terceiro item da lista de atividades é a página de sucesso após o consentimento, que servirá como redirect quando o refresh token for criado. Eduardo Melo Maia esclareceu que a equipe de engenharia de dados não precisa desenvolver o front-end para essa página, mas sim que é necessário um endereço para o redirect (00:12:18). A atividade de criar a página de sucesso será passada para Israel, e, na pior das hipóteses, poderá ser redirecionada para a CWS Platform (00:14:42).
+* End Points do Preditor de Categoria A equipe discutiu o endpoint preditor de categoria, que receberá parâmetros como `show_levels`, `show_attributes` (booleanos) e um `limit` de 1 a 8. Vitor Ozols observou que a API do Mercado Livre estava, nos testes, retornando apenas uma categoria, embora tenha posteriormente trazido duas em um teste durante a reunião (00:16:53). O preditor parece ordenar os resultados por relevância (00:19:15).
+* Parâmetros do Preditor de Categoria Em relação ao limite de retorno de categorias, Eduardo Melo Maia e Marco Franca concordaram em deixar o limite como um parâmetro para que o aplicativo possa ajustá-lo, pois isso não aumenta o trabalho para o time de integração e oferece flexibilidade (00:52:37) (00:54:29). Vitor Ozols mencionou que a quantidade de categorias devolvidas pelo Mercado Livre está relacionada ao quão específico é o nome enviado (00:53:36).
+* End Point de Categorias da Plataforma (Correção de Nome) e Conexão do Seller A discussão sobre o endpoint de categorias foi esclarecida, pois Marco Franca indicou que eles precisam das categorias do Mercado Livre, e não da plataforma (00:54:29). A equipe também precisa de um endpoint que informe se um seller já está conectado ao Mercado Livre (00:25:53) (00:55:25). Este endpoint consultará a tabela de autenticação para verificar se o partner ID foi criado (00:30:50).
+* Atualização de Atributos de Categoria e Processo de Publicação Foi discutida a necessidade de um endpoint para que os desenvolvedores possam atualizar a base de dados caso atributos de categoria sejam alterados no Mercado Livre fora do período de atualização do job interno (00:27:04). Na publicação de um produto, se o endpoint de publicação retornar um erro devido a atributos obrigatórios faltantes, os desenvolvedores podem usar um endpoint de atualização para enviar os atributos corrigidos e atualizar a base (00:56:35).
+* Status da Árvore de Categorias Gabriel Ferreira forneceu uma atualização sobre a árvore de categorias, informando que ela está rodando há cerca de uma hora e alimentando o banco com um grande volume de registros. Ele também mencionou ter finalizado a rotina de dump e as conexões de banco de dados para os ambientes de produção e sandbox do Mercado Livre (00:38:45).
+* Atualização de Dados do Mercado Livre Luciano Mercer e Eduardo Melo Maia discutiram a necessidade de manter os dados do Mercado Livre atualizados, como campos, atributos e valores obrigatórios. Luciano Mercer destacou que a equipe pode precisar de acesso para verificar e solicitar atualizações, pois campos e atributos novos podem não ter sido atualizados automaticamente, e eles poderão atualizar o banco de dados se tiverem os dados em mãos. Eduardo Melo Maia concordou que isso estaria relacionado à categoria de um determinado produto no Mercado Livre (00:57:49).
+* Detalhamento de Endpoints e Itens Pendentes Eduardo Melo Maia e Marco Franca refinaram a lista de endpoints necessários, identificando a necessidade de um endpoint para "sinalizar ou atualizar atributo obrigatório na categoria," considerado por Marco Franca como o nono item. Marco Franca também mencionou a falta de um item crucial, que seria a capacidade de, dada uma lista de produtos, saber quais já estão anunciados no Mercado Livre. Vitor Ozols pediu para Marco Franca repetir o ponto sobre a lista de produtos (00:58:46).
+* Priorização de Tarefas e Próximos Passos Eduardo Melo Maia concluiu a lista final de nove itens e solicitou informações sobre as datas esperadas e prioridades para cada um. Marco Franca estabeleceu que a prioridade número um é a autenticação, e a segunda prioridade seria a parte do preditor, o primeiro passo após a autenticação. Eduardo Melo Maia informou que, à medida que as definições estiverem prontas, eles enviarão as informações (endpoint, atributos, chamada, etc.) no grupo do CDC (01:00:09).
+* Alinhamento e Estratégia de Desenvolvimento Eduardo Melo Maia expressou preocupação com a falta de datas estimadas e começou a discutir a ordem de execução das tarefas. Ele propôs que as atividades um e dois, relacionadas à conta, deveriam ser executadas em paralelo com as atividades quatro e cinco. Eduardo Melo Maia sugeriu que, se o time fosse analisar apenas o seu lado, seria necessário paralelizar o grupo de tarefas, com a intenção de quem terminar primeiro continuar descendo a lista (01:02:02).
+
+
+Próximas etapas sugeridas
+* Vitor Ozols vai implementar um hash na chamada do end point 'autoriza' para garantir a segurança no retorno do callback do Mercado Livre.
+* Eduardo Melo Maia vai passar a atividade de criar a página de sucesso para Israel conduzir.
+* Vitor Ozols vai disponibilizar o end point de consentimento para a integração do lojista com o Mercado Livre, que receberá uma requisição de Marco Franca e devolverá a URL de redirect já com um token para segurança.
+* Vitor Ozols vai disponibilizar o end point do preditor de categoria com o limite de opções de lista como parâmetro para o app.
+* Vitor Ozols vai disponibilizar os end points (1) para a busca de categorias do Mercado Livre por nome (category), e (2) para verificar se o seller está conectado ao Mercado Livre (autoriz check).
+* Vitor Ozols vai disponibilizar o end point para publicação de anúncio que devolve erros sobre atributos obrigatórios para a aplicação.
+* Vitor Ozols vai criar um end point para que os desenvolvedores possam atualizar a base de dados de categoria com novos atributos em caso de erro na publicação.
+* Eduardo Melo Maia irá detalhar o item referente a ter um acesso para verificar e pedir para atualizarem atributos obrigatórios na categoria do Mercado Livre.
+* Eduardo Melo Maia irá mandar no grupo do CDC as datas esperadas e a prioridade de cada item discutido, e também comunicar a quem é responsável pela TR (Transaction Reference) que ela não é nossa.
+
+
+Revise as anotações do Gemini para checar se estão corretas. Confira dicas e saiba como o Gemini faz anotações
+Envie feedback sobre o uso do Gemini para criar notas breve pesquisa.
+📖 Transcrição
+10 de nov. de 2025
+Daily Engenharia de Dados - Transcrição
+00:00:00
+ 
+Eduardo Melo Maia: o notas aqui.
+Vitor Ozols: Tá vendo minha tela?
+Eduardo Melo Maia: Tô vendo.
+Vitor Ozols: Tá bom. Esse aqui é o primeiro end point que eles vão precisar, né? Eu eu fazer post, mas isso daqui é fácil para para poder alterar no código. E a única coisa que ele faz é o redirecionamento por link de autorização, né? Então aqui o dev vai fazer, não sei qual que vai ser o endereço ainda, se vai ser o mesmo que a gente tem. Então vai ser um barra autoriza como parâmetro. Aqui eu imaginei o partidinho, né?
+Gabriel Ferreira: O que
+Vitor Ozols: por exemplo, ele faz essa requisição, eh, ele faz essa, correto, é aquele que rendoriza a página de autorização, né, com dando consentimento pro para
+Eduardo Melo Maia: Entendi. Então esse primeiro, esse primeiro método, esse primeiro método, ele é o já é o de é o de integração com o Mercado Livre, ó.
+Vitor Ozols: pro conta do Mercado Liv ser usada para nossa aplicação.
+Eduardo Melo Maia: Mas aí ele vai chamar o parâmetro, só para entender o funcionamento, né? Ele vai, ele vai chamar o o end point e aí esse end point aí ele vai ele vai dar o redirect, tá?
+ 
+ 
+00:01:19
+ 
+Vitor Ozols: É point. Isso, exatamente. É, aí vou vou montar essa URL aqui. Eh, ou então eles podem chamar direto, né?
+Eduardo Melo Maia: О.
+Vitor Ozols: essa UR ali de autorização e só que eles têm que montar com meu client ID, né, com com nós. Tem esse parâmetro aqui, state, que é o que o Mercador Livre aceita, né?
+Eduardo Melo Maia: Tá, entendi.
+Vitor Ozols: Eu tô usando ele com partid porque a gente recebe ele de volta, tá? Então tem essas duas formas, né? Como como eu imaginei que tá lá na sua mão e a gente que tá pode falar faz eles chamarem engenharia de dados, né?
+Eduardo Melo Maia: Eu eu não, eu eu faria eles chamarem o o não redirecionar pelo app.
+Vitor Ozols: Dessa forma, então tá bom.
+Eduardo Melo Maia: eh, chama genia de dados.
+Vitor Ozols: Beleza.
+Eduardo Melo Maia: Eh, Eh Eh, Eh,
+Vitor Ozols: Esse cara aqui manda lá para URL do Mercador Livre, né? pro usuário dar o consentimento e o Mercado Livre ele vai retirar pra nossa página que vai ser o off callback. Esse off callback aqui ele já vai receber retornando no Mercado Livre. Aí ele vai receber direto com esses parâmetros de state, que é o que a gente enviou aqui embaixo, que eu imaginei usar como partner ID.
+ 
+ 
+00:02:51
+ 
+Eduardo Melo Maia: Так.
+Vitor Ozols: Aí o nosso me Ah, cara, tava armazenando um banco na estrutura que a gente já tem.
+Eduardo Melo Maia: Como que a gente garante a segurança disso daí?
+Vitor Ozols: Não é muito seguro não, mas a gente pode criptografar. Cadê? Cadê?
+Eduardo Melo Maia: Porque a URL de CBC se ela for descoberta, né? Só, só uma, uma dúvida. O AOR ele vai vir, ele vai vir com um token, né, do Mercado Livre, ó.
+Vitor Ozols: O CP que vem o Autoriz aqui o DV mandar só partir ID. Aí o Mercado Livre vai direcionar pra página de autenticação de de consentimento lá do Mercado Livre mesmo, onde o uso dite e o Mercado Livre mesmo redireciona para nosso callback. Aí nesse callback ele vai mandar o refresh token. Aí o meu código vai usar esse refresh token para poder inserir esses dados na base na na nossa base. Aí o código que eu fiz aqui, ele vai mandar aqui, ó, mais ou menos.
+Gabriel Ferreira: O Edu, você sabe qual tecnologia eles estão usando para fazer o front?
+Eduardo Melo Maia: Ah, estão usando. Ah, não deu branco agora. Pera aí.
+Vitor Ozols: P tá tudo c***** também.
+ 
+ 
+00:04:57
+ 
+Gabriel Ferreira: Pelo menos o tema GTK do desse sistema que você usa aí é bonito. Dever fica visualmente agradável.
+Vitor Ozols: É.
+Gabriel Ferreira: Você sabe
+Vitor Ozols: Oxe, mas o control enter não funciona.
+Gabriel Ferreira: os qual usuário você tá usando para acessar o banco de Mercado Livre?
+Vitor Ozols: Hum. Ah, cara, acho que aqui para consultar tá usando dark flow mesmo.
+Eduardo Melo Maia: É flutter. Estão usando flatter mesmo.
+Gabriel Ferreira: Да.
+Vitor Ozols: Ó, do no primeira poque tá dessa forma aqui. Tá sem criptografia nenhuma, mas a gente pode adotar alguma aí e fazer a conversa no código.
+Eduardo Melo Maia: Não. Eh, mas assim, como é que a gente garante que a gente tá recebendo requisição do Mercado Livre mesmo, sabe? que aceitar tal pensando tal, talvez você tivesse na na hora que você vai disponibilizar esse método ali pro pessoal chamar, na hora que chamar talvez você devesse gerar um alguma chave que ela tem que vir junto na no
+Vitor Ozols: M. A gente já manda partir.
+Eduardo Melo Maia: retorno ali, entendeu? Tipo uma chave que seja válida para Ah!
+Vitor Ozols: O part partnered não serve ela.
+Eduardo Melo Maia: Ah, não, mas um tokenzinho, né?
+Vitor Ozols: Sei lá. Colocar aqui mais um rash.
+ 
+ 
+00:06:43
+ 
+Vitor Ozols: Então, é esse campo state, ele serve para isso mesmo.
+Eduardo Melo Maia: É tipo um rzinho. É que você consiga validar na volta. Tem tem uma a parte.
+Vitor Ozols: Na verdade, é que eu como Mercado Livre devolve ele, eu pensei em usar ele partid.
+Eduardo Melo Maia: Não, não, tudo bem. Você tá certo. Eh, mas eu tô só pensando na fragilidade, entendeu?
+Vitor Ozols: Uhum.
+Eduardo Melo Maia: e implementar um algum hash eh na hora que fizer essa chamada, você gerar um hash deixar ela gravado eh em algum lugar ali.
+Vitor Ozols: Так.
+Eduardo Melo Maia: Na hora que voltar o callback, o resto tem que bater, sabe?
+Vitor Ozols: Угу.
+Eduardo Melo Maia: Ah, e uma outra coisa, né? Eu vi que você loga ali em cima, né? Eh, no outro método ali do callback, né? Eh, teria que eh seria fundamental a gente logar também, inclusive aqui no método autorizer, tipo, ah, recebi um request, eu recebi um request aqui.
+Vitor Ozols: Como assim logar? Ah, o log a gente vai colocar depois. Sim. É, é que eu eu não sei gerenciar isso daqui.
+Eduardo Melo Maia: Ah, vai.
+ 
+ 
+00:07:49
+ 
+Eduardo Melo Maia: Ah, não. Beleza. esquecer
+Vitor Ozols: Como vai trocar o RL? Eh, ah, acho que dá para gerenciar pro cookies. Pois eu não sei se o Mercado Livre vai conseguir. É, é que eu não sei como gerenciar esse R sem usar banco, sabe? Não sei se os porc vai dar certo, porque não vai, não sei se o mercador dele consegue reenviar também, sabe?
+Eduardo Melo Maia: Ah, não. Não, mas acho que não é por cook não, cara. Cook de browser você tá falando.
+Vitor Ozols: Uhum.
+Eduardo Melo Maia: Ah, não, acho que não.
+Vitor Ozols: Tá aqui a gente depois. Так.
+Eduardo Melo Maia: Eu acho que aí você vai ter que gerar um hash. Eh, vai ter que ser sempre aleatório mesmo, gravar em algum lugar, amarrar com part, né?
+Vitor Ozols: Угуm.
+Eduardo Melo Maia: E aí na hora que voltar o do Mercado Livre, você vai ter que pegar o o R ali. É, na verdade, eu não mandaria nenhum partir a ID, eh, eu geraria um, eu geraria você, a gente pode discutir isso com o Vlad, tá? Mas, por exemplo, você recebeu um partner ID ali na requisição, né?
+ 
+ 
+00:09:15
+ 
+Eduardo Melo Maia: Eu geraria um hash e atrelaria esse partir ID. Quando o que vai voltar do Mercado Livre é só o R, o partner ID, o partner ID você vai ter um deparo do lado de cá, entendeu?
+Vitor Ozols: E se eu mandar um sei lá, se eu mandar o partido, base 64. Uhum.
+Eduardo Melo Maia: É, é, é que o é que o base 64 ele é frágil, né? Para quem não tiver escutando vai sacar isso aí.
+Vitor Ozols: É verdade. E se mandar esse partner aí de codificado em alguma outra criptografia assim, ser uma outra
+Gabriel Ferreira: que dá para fazer. Vou formular uma resposta. Pera aí.
+Vitor Ozols: bom. Vou deixar pendentes aqui, então.
+Eduardo Melo Maia: É, deixa aí. É de novo, né? pra gente, o importante é fazer o o produto chegar do outro lado, né? Vai anotando isso como atividade aí. Isso não tem que tá pronto para demo, digamos assim. Isso tem que tá pronto para produção, tá?
+Vitor Ozols: Так.
+Eduardo Melo Maia: Só tô fazendo essas observações de segurança. Então, só repassando, né? Eh, a primeira coisa que você tem aí é o método, é o end point, né?
+ 
+ 
+00:10:39
+ 
+Eduardo Melo Maia: primeira atividade aí ele é o end point do eh o consentimento para a integração do logista com o mercado livre
+Vitor Ozols: para dar consentimento do uso na conta CWS conta de cliente. Угуm.
+Eduardo Melo Maia: com Mercado Livre. Primeira atividade, né? Eh, aí o segundo que você tá desenhando aí já é o callback, né? É o callback, né?
+Vitor Ozols: Cback, ele cria o o access token, refresh token.
+Eduardo Melo Maia: Ah, vai receber o access. Eh, pergunta, você já analisou na documentação quanto tempo vale? Tem que ficar fazendo refresh 6 horas.
+Vitor Ozols: É 6 horas. 3 horas, mas aqui eu já em código tô gerenciando o a atualização dele.
+Eduardo Melo Maia: Tá, mas isso é um é um job que vai ficar rodando.
+Vitor Ozols: Fazendo uma continha básica aqui. Se for 5 horas ele já já atualiza.
+Eduardo Melo Maia: Como que é isso aí? Ou toda vez você recebe a requisição.
+Vitor Ozols: Não, não. Toda vez que ele recuperar do banco, ele faz a validação.
+Eduardo Melo Maia: Entendi. Tá. Esse não, não é atividade macro, né?
+ 
+ 
+00:12:18
+ 
+Eduardo Melo Maia: Tá.
+Vitor Ozols: Não, não vai ser, vai ser útil quando for usar o token para mandar os produtos para publicar.
+Eduardo Melo Maia: Tá bom, entendi. Aí, o terceiro item que a gente tem como atividade é a página sucesso, né?
+Vitor Ozols: É, cara, esse aí a gente foi com a gente não, viu? Eu acho que você nem tinha que ficar com a gente.
+Eduardo Melo Maia: Oi. Então, mas é só a página de sucesso, certo? a gente que que a gente é que a gente que precisa, né?
+Vitor Ozols: Então, mas se o que é renderizar o HTML. É, mas a gente que vai querer ser HTML.
+Eduardo Melo Maia: Eh, não, não é a gente não, mas é só, mas é o que a gente precisa, né? A gente precisa só de um endereço para passar um uma página de sucesso, né?
+Vitor Ozols: A gente precisa. Perfeito. Precisamos vai ser o redirect aqui do sucesso quando ele criar o refresh token.
+Eduardo Melo Maia: Eh, o airflow ele renderiza HTML.
+Vitor Ozols: Não, eu coloquei aqui só para não ficar sem nada porque eu vou testar quando for testar para ele jogar para algum lugar, sabe?
+Eduardo Melo Maia: Ah, tá. Entendi.
+ 
+ 
+00:13:33
+ 
+Vitor Ozols: Mas dá, viu? Não dá para jogar um HTM ali no no Flow. Ele tem um recurso de plugin que você consegue subir qualquer aplicativo Python. Mas esse é meio bizarro.
+Eduardo Melo Maia: Entendi. É porque assim, se a gente tiver o portal do CDC, para mim pode ser até um uma landing page que a gente faz lá, sabe? uma mensagem de sucesso só para dizer assim: "Ah, eh, sucesso é não, você só daria redirecte botou aí. Ah,
+Vitor Ozols: Menor a gente aqui, né, gente? Ah, tá. Não, perfeito. Só confirmando mesmo. É porque da da forma que o Marcão falou, ele falou que a gente que ia fazer, eu imaginei a gente fazendo front lá.
+Eduardo Melo Maia: eh, não, o o é porque foi uma das discussões da reunião da semana passada, né, da reunião que eu não consegui entrar, né?
+Vitor Ozols: Угуm.
+Eduardo Melo Maia: Eh, não vai, ele não vai fazer isso, não vai acontecer dentro do app, né? Ele vai sair pro browser. Então, quando ele falou assim, ah, vocês significa que não é ele entendeu? Tipo, eu não sou que eu vou fazer uma página para isso.
+ 
+ 
+00:14:42
+ 
+Vitor Ozols: Ah, tá. Tá.
+Eduardo Melo Maia: Eu não vou resolver isso dentro do app. Vocês no sentido, sei lá, d seus, tipo assim, a gente dá nossos pulos aqui para para redirecionar para algum lugar, entendeu?
+Vitor Ozols: Mhm.
+Eduardo Melo Maia: Mas não significa que a gente precisa fazer a página. Isso aqui eu vou colocar como atividade ali para o para o Israel conduzir ali. Na pior das hipóteses que você pode pôr aí é o redirect para plataforma, para CWS Platform, tá pro site ali.
+Vitor Ozols: Uhum. Confesso então por enquanto.
+Eduardo Melo Maia: Deixa ali porque depois é, eu posso até ver, não sei quem que é que tá mexendo com aquele portal lá, mas depois pode criar uma página lá. É, gente, é pra gente ver isso aí.
+Vitor Ozols: Já era.
+Eduardo Melo Maia: Não é importante, tá?
+Vitor Ozols: M. M.
+Eduardo Melo Maia: Então, então a atividade de criar página de sucesso, né? Passar pro Israel. Isso aí tá. Uma outra atividade eh o end point do preditor, né?
+Vitor Ozols: Ah, tá. Vai ser esse dom e ele vai receber pegar aqui o bas model dele. Não, esse aqui não.
+ 
+ 
+00:16:53
+ 
+Vitor Ozols: Por enquanto eu vou mandar no engenharia de dados, então só não manda aqui nesse chat porque a gente vai perder ele. Então ele vai receber esses campos aqui, vai ser o nome. Vocês estão me ouvindo?
+Eduardo Melo Maia: Tô te ouvindo.
+Gabriel Ferreira: Sì.
+Vitor Ozols: Ah, beleza. Esses parâmetros aqui, ó, show levels, eh, vai ser buleiano, verdadeiro, falso show atributos. Aí a gente vai pegar do banco esses dois, né? O limite aqui na documentação do Mercado Livre específica que aceita de 1 a oito, só que todos os testes que eu fiz, a API dele só tá funcionando com uma categoria, tá sempre retornando uma só.
+Gabriel Ferreira: Ora
+Vitor Ozols: Mas enfim, tô deixando aqui também. O que é isso?
+Eduardo Melo Maia: Ele já tá retornando uma categoria no preditor e era para mandar umas oito.
+Vitor Ozols: É, ele aceita de um
+Eduardo Melo Maia: Entendi. Tá.
+Vitor Ozols: aqui duas Camisa vermelha longa longa. Oxe, agora trouxe duas. Ah, então beleza.
+Eduardo Melo Maia: Ah, funciona.
+Vitor Ozols: É, oi. Eu eu mostrei para todo mundo semana passada, ó, aqui, ó.
+ 
+ 
+00:19:15
+ 
+Vitor Ozols: Ah, entendi. Entendi. Melhores correspondências aí. Não colo não coloca. Então,
+Eduardo Melo Maia: Hum, entendi.
+Vitor Ozols: fala uma coisa que você acha que teria bastante categoria só para validar minha hipótese? Teve uma ideia?
+Eduardo Melo Maia: Ah, só põ põe lá uma outra palavra lá.
+Vitor Ozols: aqui. Ótimo. Então, funciona assim.
+Eduardo Melo Maia: Põe lâmpada a lógina.
+Vitor Ozols: Aí quando vai deixando mais específico, ele vai reduzindo, né?
+Eduardo Melo Maia: Ah. Só uma
+Vitor Ozols: Que que você acha? Deixar sempre Ah, o deve manda, né? Deve escolhe quanto vai mandar.
+Eduardo Melo Maia: será que ele ordena por relevância?
+Vitor Ozols: Eu acho que sim.
+Eduardo Melo Maia: Ja.
+Vitor Ozols: Só uma observação para mim aqui que no meu código não tava considerando vir mais do que uma. Na verdade não, na verdade ainda não terminei, mas eu tava imaginando que ia vir sempre uma. Bom, aí vai ter o ainda não pensei para um nome, para outro. Bom, vou colocar por enquanto essa barra doentos e esse cara acho que vai receber as mesmas coisas tirando o limite.
+ 
+ 
+00:22:21
+ 
+Eduardo Melo Maia: Eh, na última reunião eu tinha entendido algo de um jeito e daí o pessoal me falou outra coisa. Eles me disseram que quando eh o cliente falar que quer integrar um produto com o Mercado Livre, que esse produto já vai estar cadastrado aqui na plataforma.
+Vitor Ozols: M. Certo.
+Eduardo Melo Maia: E nossa, tá bojando aqui. Dito isso, eh, nesse, é que ainda não é agora, né, que nós vamos ver isso, né? A gente tá falando do preditor de categoria, né?
+Vitor Ozols: M. É na hora da gente cadastrar aí.
+Eduardo Melo Maia: Mas na hora que a gente for mandar o produto, provavelmente a gente vai ter vai receber ou pode receber o Ah, será que é o SK ID? Não, não é SK ID. A gente vai receber o o SKU partner Ed, né? É, isso é uma coisa, eh, isso é uma coisa que a gente vai ter que discutir.
+Vitor Ozols: É, imagina is tá aqui dia.
+Eduardo Melo Maia: E aí, como é que é o depara hoje, por exemplo, que a gente tem no Mercado Livre, ó, stop, ó.
+Vitor Ozols: É, tá amarrado estoque.
+Eduardo Melo Maia: Eu mereço aí de tá beleza.
+Vitor Ozols: Toque e merid.
+ 
+ 
+00:23:59
+ 
+Eduardo Melo Maia: Não, tá bom. Já já tem um caminho das pedras para fazer isso. Então aí beleza. Então repassando na point de consentimento, o callback que vai receber o access token. Aí a página de sucesso que daí vou ver com Israel.
+Vitor Ozols: É bom da própria categoria.
+Eduardo Melo Maia: end point do preditor de categoria e e mais um. Como é que eles vão saber? Eh, como é que ele que é? Desculpa.
+Vitor Ozols: das próprias categorias, né?
+Eduardo Melo Maia: Ah, das próprias categorias, né?
+Vitor Ozols: Vai ser o barra, vou fazer o barra domin qu vai ser string que vou fazer a qu lá com o plugin lá que o V falou aí vai ter os mesmos, né? Show levels show attributs.
+Eduardo Melo Maia: Tá? Então a gente vai ter o end point do categorias da plataforma.
+Vitor Ozols: É, fica estranho. Vamos a nomenclatura. É que da Discovery é a mesmo que o Mercador Livre usa, né?
+Eduardo Melo Maia: Eh,
+Vitor Ozols: para chamar a categoria.
+Eduardo Melo Maia: É, eu chamaria de category mesmo, se a gente tá abstraindo, entendeu?
+Vitor Ozols: Так.
+Eduardo Melo Maia: É, a gente tá criando a camada de integração, né?
+ 
+ 
+00:25:53
+ 
+Eduardo Melo Maia: Então isso daí eu traria a disponibilidade dos end points a os nomes do da plataforma.
+Vitor Ozols: Tá. Oxe, cadê o botãozinho de editar?
+Gabriel Ferreira: Será que pode ajeitar no grupo?
+Eduardo Melo Maia: É, só tem sirve, né?
+Gabriel Ferreira: Pode ser uma perdição do grupo mesmo grupo não, né?
+Eduardo Melo Maia: Ué.
+Gabriel Ferreira: Testa Так.
+Eduardo Melo Maia: Ô, ô Zão, mas eu eu nem vou usar isso aí para para nada. Agora isso que você tá digitando aí é mais pra gente mesmo, tá?
+Vitor Ozols: Ah, tá.
+Eduardo Melo Maia: É.
+Vitor Ozols: Não, que achei que você já queria mandar pros dev lá.
+Eduardo Melo Maia: Ah, sim. É isso na hora que você tiver disponível da gente precisa mandar. É, por enquanto eu só quero bater a as atividades.
+Vitor Ozols: Ah, perfeito.
+Eduardo Melo Maia: Então tem mais outra ainda, né, que a gente falou na última reunião que é assim, como é que o eles vão saber que o que aquele seller tá plugado já no Mercado Livre, que deu certo?
+Vitor Ozols: Ah, eles vão consultar. Ah, eu possoer. Ah, é verdade. Tinha anota de aí tem mais um outro aqui também que vai ser para fazer um update na nossa árvore de categoria no méd lá, nossa extração, né?
+ 
+ 
+00:27:04
+ 
+Eduardo Melo Maia: Oh.
+Vitor Ozols: Vamos supor uma teve uma atualização dos do atributos da categoria entre a os períodos que o nosso job roda, né, que autoriza e que eles recebem esse erro na requisição pro mercador lívido no processo de cadastro, fazer um end point para eles, né, mandarem os atributos novos E esse é que você falou que que era mesmo falar de novo.
+Eduardo Melo Maia: Eh, o o que retorna se o ser tá conectado.
+Vitor Ozols: Desculpa, eu tava lembrando desse acabo só.
+Eduardo Melo Maia: Tá conectado livre aí. Aí eu não entendi. Foi isso que você falou agora. Isso que você falou de não lembrava. Eh, explica de novo aí para ver se eu pego. É, isso daí é para mandar os seus atributos.
+Vitor Ozols: É, quando o Dev vai fazer a requisição pra gente lá, pegando os dados da categoria, a gente vai puxar do banco, né, que é o processo que o Gabriel tava migrando lá.
+Eduardo Melo Maia: Sì. Sì.
+Vitor Ozols: Eh, a gente vai atualizar isso com uma certa frequência, né? A gente, sei lá, acho que a gente tá deixando uma vez por semana.
+Gabriel Ferreira: Sì.
+Vitor Ozols: Vamos supor que algum atributo tenha sido atualizado no Mercado Livre, é fora do nosso período de atualização da nossa frequência.
+ 
+ 
+00:29:04
+ 
+Eduardo Melo Maia: M. O o problema
+Vitor Ozols: Quem vai receber esse erro vai ser o dev. Então, eles querem um end point para eles atualizarem a nossa base de dados.
+Gabriel Ferreira: Er
+Vitor Ozols: entende nesse sentido?
+Eduardo Melo Maia: ficou claro. A solução para mim é que tá esquisita. É que não tá claro.
+Vitor Ozols: Vou fazer, sei lá, um barra category.
+Eduardo Melo Maia: H a a eh assim o que que eu entendi, tá? Isso eu entendi. O Mercado Livre, ele vai no ele vai mandar um push pra gente falando que tem uma necessidade de um atributo novo para um produto.
+Vitor Ozols: Não, não, na hora que não, não, na hora que o deve publicar o produto nosso end point, ele vai receber um erro se tiver algum atributo faltando, entendeu?
+Eduardo Melo Maia: É isso? Não. Tá bom. Hum. Ah, exatamente na hora da publicação.
+Vitor Ozols: É.
+Eduardo Melo Maia: Ah, tá. Mas aí a gente já tá a gente já tá falando da agora dentro de parte de publicação, né?
+Vitor Ozols: mandar lá um
+Eduardo Melo Maia: Tá, entendi. Aí você tem que devolver isso aí para ele.
+Vitor Ozols: deves. Ah, os devs vão vão me devolver, né, esses atributos atualizados, porque vai retornar no erro.
+ 
+ 
+00:30:50
+ 
+Vitor Ozols: E eu acho que is não vai ser muito usado não, tá? E nem na minha cabeça isso nem é tão prioridade assim também, mas pode acontecer, né, só para se precaver.
+Eduardo Melo Maia: Oh.
+Vitor Ozols: E aí esse outro aí, o para eles verificarem se bateu, vai ser exatamente que é a tabela de autenticação lá.
+Eduardo Melo Maia: Так.
+Gabriel Ferreira: Вот.
+Vitor Ozols: Nossa, que raiva desse debig bugado.
+Eduardo Melo Maia: M.
+Vitor Ozols: Aí o meu end point lá, sei lá, eles vão ficar pingando aqui na P que vai consultar aqui. Stó, mas eu vou colocar na migration para ter partida edin. Aí vai ficar batendo e vai ver se se foi criado ou não. Simplesinho também. OK.
+Eduardo Melo Maia: Sim, só anotando aqui. Tá, vou mandar aqui no no engenheiro de dados aqui, ó. se precisa corrigir algum texto aqui. Consegui editar aí?
+Vitor Ozols: Não sumiu, mano.
+Eduardo Melo Maia: Não, mas embaixo ali, ó. Tá editado ali, ó. De baixo vai.
+Vitor Ozols: Ah, será que é aqui? Não. E eu tinha acabado de editar aqui, Tô até com meditado aqui.
+ 
+ 
+00:33:23
+ 
+Eduardo Melo Maia: Que que coisa? Ó, não tem não tem permissão aqui de Deixa eu ver se tem permissão.
+Vitor Ozols: Que loucura.
+Eduardo Melo Maia: Seu o seu status tá com um zzinho tipo de dormindo para quem?
+Vitor Ozols: É, então não sei porque que tá assim também.
+Gabriel Ferreira: Sua notificação tá pausada por algum motivo.
+Vitor Ozols: Será que eu tô usando navegador? Oi. Hum. É, não mudou nada aqui ainda não.
+Gabriel Ferreira: Sua notificação tá pausada por algum motivo que vocês tm a ver. Acho que era isso, né?
+Vitor Ozols: Hum. Vamos lá ver se então. Categoria discover. Ox.
+Eduardo Melo Maia: Alô, alô. Oi. Oi, tudo bom? Tudo joia. Só um minuto, gente.
+Gabriel Ferreira: Oké,
+Vitor Ozols: Já usou obsidian. Ô, Gabriel, bom para c****** para essas coisas, né?
+Gabriel Ferreira: Já sim. Por qu, cara?
+Vitor Ozols: Tipo, tem ele para deb, será?
+Gabriel Ferreira: Tem tem, mas tem como tem como flashpack também, se for o caso para rodar flatpack nessa distribuição aí.
+Vitor Ozols: Olha, tem até para para Android.
+Gabriel Ferreira: Sim, usava obsidian e colocava tudo num repositório no GitHub.
+ 
+ 
+00:38:45
+ 
+Vitor Ozols: Deixa eu ver de Android.
+Gabriel Ferreira: fazia assim.
+Vitor Ozols: Ô louco, é topinha.
+Gabriel Ferreira: Aí eu desisti, comecei a usar Noiona e nunca mais voltei.
+Vitor Ozols: Vou testar is aqui, mano. A gente podia usar um noite depois, né?
+Gabriel Ferreira: Sim, seria bem ótimo.
+Vitor Ozols: Угу.
+Gabriel Ferreira: Mano, o negócio quer falar o árvore tá categoria tá rodando. Na única é que vai fazer agora uma hora que ela tá rodando sem parar, tá ligado? E tá alimentando o banco, tá com uma quantidade enorme de registro. Quando terminar eu vou ver se não tem coisa duplicada nem nada, mas eu não achei que ia ser tão grande assim, não.
+Vitor Ozols: Ah, se você tivesse colocado os índices a ele não duplica não.
+Gabriel Ferreira: Eh, os índ alteração dos índices para usar o a busca lá por texto. Eu ainda não subi, eu tava esperando essa rodar antes, tá ligado? E aí eu finalizei a paradinha do dump.
+Vitor Ozols: Ah, para criar a primeira vez.
+Gabriel Ferreira: Oi, desculpa.
+Vitor Ozols: Para criar a primeira vez.
+Gabriel Ferreira: Sim, eu fiz a paradinha do dump também criei a conexão lá no databases pros arquivo, pro banco do Mercado Livre em Prod, em Sandbox.
+ 
+ 
+00:40:37
+ 
+Gabriel Ferreira: E aí eu só tava esperando essa parada sem de rodar mais para botar isso no Mas é, mas acho que a pouco já deve acabar de rondar.
+Vitor Ozols: Mas demora mesmo. M.
+Gabriel Ferreira: Vai demorar um pouquinho ao dump, eu acho.
+Vitor Ozols: Ó, tem. Nossa, nada. Tá ma zoado aqui.
+Gabriel Ferreira: Oi,
+Vitor Ozols: ficou zoado.
+Eduardo Melo Maia: Aí, voltei, gente. Pessoa me ligando aqui. Fala de AWS. Ah, então tinha passado ali a lista, né? É mais ou menos isso aí. Você quer corrigir algum texto aqui?
+Vitor Ozols: Ah, eu tava fazendo aqui uma outra ferramenta.
+Eduardo Melo Maia: Ah, tá.
+Gabriel Ferreira: Esse esse obsidian du perguntar se você conhece Sim, um agregadorzão de
+Eduardo Melo Maia: Oi. Não entendi.
+Vitor Ozols: Essa ferramenta obsídian.
+Eduardo Melo Maia: Eu conheço não.
+Vitor Ozols: Nossa, tá meio também.
+Gabriel Ferreira: arquivo marquidão.
+Eduardo Melo Maia: Não conheço não. Final de semana tá valendo sobre economia de token. É, tá, tá. Só tem falado muito disso agora. Não usar Jonaria com a Z, sabe?
+ 
+ 
+00:43:57
+ 
+Vitor Ozols: Bom, e do de publicação eu ainda tenho que pensar um pouco, tá? Mas acho que a princípio vai ser esses daí mesmo, o autoriz e o autoriz check, que o de publicação eu quero entender como que o pessoal vai gerenciar os atributos, sabe?
+Eduardo Melo Maia: M.
+Vitor Ozols: Então, provavelmente eles vão ter que me mandar também uma lista de dicionário, né? De dicionários. Aí eu quero pensar nele, mas acho que até amanhã dá para dá para ver sim.
+Eduardo Melo Maia: Ah, é, mas tá, mas vamos dessas as sete atividades que eu listei aqui, vamos ver o que que precisa para pro pessoal poder trabalhar agora e focar nelas ali. Ai, deixa eu ver se Oh. o Marcão aqui.
+Vitor Ozols: comprar dele verem.
+Eduardo Melo Maia: Ne, ol.
+Vitor Ozols: Putz, tem que ter mais um aqui.
+Marco Franca: tarde.
+Eduardo Melo Maia: Tarde, hein, Marcão. Beleza.
+Marco Franca: Beleza, tranquilo.
+Eduardo Melo Maia: Ah, coisa rápida aqui, ô. Tomar muito seu tempo não, hein. Ô, ô Zelo, volta lá só o tiquinho lá no no grupo ali do Slack.
+Marco Franca: Sor de
+Luciano Mercer: Galera, opa, o Marco falou assim: "Não vou, eu não vou entrar com esse pessoal sozinho não".
+ 
+ 
+00:46:27
+ 
+Eduardo Melo Maia: Eita, até o Luciano veio também.
+Gabriel Ferreira: No.
+Eduardo Melo Maia: E aí?
+Vitor Ozols: Opa. M.
+Eduardo Melo Maia: Eita nós. É só, é só um pedido, é só um pedido de ajuda.
+Marco Franca: Mentira, mentira, rapaz.
+Luciano Mercer: Mentira, não falou nada. Mentira Uhum.
+Eduardo Melo Maia: Não, mas sobe o sobe um pouquinho ali, ó. Só para não é, é que assim, a gente fez várias reuniões, né? Eu tô só alinhando aqui as atividades macro aqui que a gente tem que entregar para vocês, tá? Eu até mandei ali, ó, de um a sete, tá vendo aí na tela aí? Tá?
+Marco Franca: Aha.
+Eduardo Melo Maia: Então, então primeiro eh vou falar aqui, tá? Vou vou ler aqui, mas aí vou vocês vão perguntando, né, se tiver, tá?
+Vitor Ozols: M.
+Eduardo Melo Maia: Então, primeiro é depoint de consentimento ali, né, paraa integração do logística, a gente tá chamando de consentimento porque na hora que clicar no botão, ele vai cair numa tela de consentimento ali, tá? Eh, então o que a gente tem que disponibilizar para vocês é o end point nosso, né, onde vocês vão passar pra gente ali o o a princípio partner ID ali.
+ 
+ 
+00:47:14
+ 
+Marco Franca: Так.
+Eduardo Melo Maia: E aí o resto a gente se vira, né? A gente que vai dar o redirect para lá, né? E o item dois ali que é o que é o o callback ali que vai receber o access token, né? e depois chamar o item três, que é a página de sucesso. A gente também vai daí paraa frente a gente vai tocar aqui, tá? Então essa atividade 1 e dois e três é só aquela parte de clicar no botãozinho, ir lá, dar o aceite, né, e voltar na tela.
+Luciano Mercer: Ja.
+Marco Franca: Ah. Eu fiquei.
+Eduardo Melo Maia: Beleza, legal, né? Você deu aceite. É isso. Tem aqui dúvidas?
+Luciano Mercer: Aí nesse processo daí o ô Mar vai fazer essa parte, daí ele vai bater no end point para ver se ele tá conectado ou não, né?
+Eduardo Melo Maia: É, então é isso, a gente fala ali no item seis, ó.
+Luciano Mercer: Ah, beleza. Beleza.
+Eduardo Melo Maia: É.
+Marco Franca: É, eu fiquei com uma dúvida aí do e não sei se a gente vai chamar o post de vocês para vocês fazerem o redirect lá pra página do do Mercado Livre ou a gente já manda ele direto pra página do Mercado Livre e só coloca o redirect do callback de vocês para quando ele der o aceite.
+ 
+ 
+00:48:26
+ 
+Eduardo Melo Maia: Tá? Eh, podemos debater, mas eu sugiro a inteligência ficar no end point nosso aqui, porque aí a gente loga, né?
+Marco Franca: Cai cai. Угуm.
+Eduardo Melo Maia: faz toda a telemetria do negócio.
+Luciano Mercer: para não ficar descentralizado também, né?
+Eduardo Melo Maia: É porque assim, se jogar do lado de vocês, eh, assim, aí daí vocês me vocês me corrijam se eu tiver pensando besteira, inclusive, né? Mas sei lá, vamos supor que sei lá, caso de problema, ah, um vendedor tá clicando, não tá funcionando, né? Aí eu vou ter que pedir para alguém de app ver o log do app entrar no app, ver se tá com problema no app, né?
+Marco Franca: Ah.
+Eduardo Melo Maia: Agora se vocês garantem que tá chamando end point, né? Teoricamente o problema tá isolado aqui só no motorzinho do Mercado Livre de integração com marketplace, né? Então eu tentei ser prático nesse aspecto, né? Então eu recebo a requisição, eu trato porque assim, ó, inclusive a gente tava discutindo aqui a a a criação de um token nosso, né, de callback, né, para não ficar uma URL exposta ali.
+Marco Franca: Ah.
+Eduardo Melo Maia: Eh, porque senão vocês senão vocês têm que implementar a segurança do lado de vocês, entendeu?
+ 
+ 
+00:49:41
+ 
+Eduardo Melo Maia: assim.
+Marco Franca: É que na verdade a gente só vai chamar uma real externa, né? Aquela deles lá, né?
+Eduardo Melo Maia: Exato. Porque assim, porque assim, o Mercado Livre, ele só chama uma ORL de volta passando aquele parâmetro que a gente manda inicialmente para ele, entendeu?
+Marco Franca: Só direcionou, né?
+Eduardo Melo Maia: Então assim, ficam vai ficar uma ORL exposta que o Mercado Livre vai enxergar, mas alguém pode saber essa ORL, alguém pode ficar sacaneando lá, né? Tipo, mandando um monte de ID lá e, né? E e a gente não vai saber se foi uma transação válida, né? Então vocês teram que implementar uma camadinha de segurança do lado de vocês, criar um tokenzinho, fazer alguma coisa assim.
+Marco Franca: Tranquilo.
+Eduardo Melo Maia: Eh, aí, então eu pensei assim, se chama do lado de cá, a gente já faz isso também, tá?
+Marco Franca: Aí.
+Eduardo Melo Maia: Tá, fica eh, e então eu entendi que ao clicar no botão vocês vão paraa web já vocês chamariam o nosso end pointato de URL,
+Marco Franca: Aham. Então aí só, só para eu entender ideia. Então a ideia a gente chama um pzinho e vocês devolvem a URL pra gente. É isso mais ou menos.
+ 
+ 
+00:50:43
+ 
+Marco Franca: Hum. É, me perdi.
+Eduardo Melo Maia: entendeu? Hum. Isso.
+Marco Franca: É, me perdi. Eh, porque assim, né, quando quando ele clicar no botão lá, quero ir pro Mercado Livre, né, quero fazer login. Aí a gente chamaria uma pezinha rest de vocês falando, ó, esse esse rapaz aqui, esse, né, esse partner com essa account, quer fazer integração com o Mercado Livre, a gente é um rest aí, não sei, aqui um rest
+Eduardo Melo Maia: Ah, você vocês vocês estão esperando receber uma ORL para dar o redirect. É isso.
+Marco Franca: isso.
+Eduardo Melo Maia: Beleza.
+Marco Franca: Ou a gente só manda o redireir direto e que é a URL fixa ali a exposta, né? E e para você a gente fala: "Ó, esse cara tentou usar, não sei. Aí tanto faz pra gente, na verdade, né?" Ah,
+Eduardo Melo Maia: Alguma visão, porque eu tinha pensado em chamar um RL direto. Já precisa chamar o RL, entendeu?
+Marco Franca: então essa era a minha dúvida, né?
+Eduardo Melo Maia: Ah.
+Marco Franca: Mas eu entendo, então eu entendi onde que entrou uma um endentimento ali paraa integração. Primeiro item, né? Acho que eu entendi errado a tua explicação.
+ 
+ 
+00:51:40
+ 
+Eduardo Melo Maia: É, eh, vamos, tanto faz para você chamar o redirect ou chamar o RL direto ou chamar o método, receber o redirect e fazer, tanto faz.
+Marco Franca: Então, tanto faz, tanto faz.
+Eduardo Melo Maia: Ah, então vocês receberem a URL, fazer o redirect para mim é mais seguro do que fazer de outro jeito. Concordo?
+Marco Franca: Tá, sim.
+Eduardo Melo Maia: Ah, beleza.
+Marco Franca: Pode ser. Eu chamo o end point, falo: "Ó, esse cidadão quer logar no Mercado Livre, você devolve aí, então manda ele para essa URL."
+Vitor Ozols: Eu só não sei como que eu varia desse token do meu lado.
+Marco Franca: Aí eu direciono.
+Eduardo Melo Maia: E aí a gente gera o tokenzinho que você vai mandar lá, o RL certinho já com token já pra parte de segunda implementada.
+Marco Franca: Fechou? Isso.
+Eduardo Melo Maia: Beleza, fechou os não, não.
+Marco Franca: Beleza. Maravilha. Fechou.
+Eduardo Melo Maia: A gente que vai gerar um Isso, isso, isso.
+Vitor Ozols: Ah, tá tá tá tá. Então o Marcão só vai mandar o partir a ID mesmo e eu faço o resto.
+Eduardo Melo Maia: Exato.
+Vitor Ozols: Fechou?
+Marco Franca: Isso
+Eduardo Melo Maia: Beleza.
+Vitor Ozols: Maravilha.
+ 
+ 
+00:52:37
+ 
+Eduardo Melo Maia: A gente devolve a já pronta já com o token, com o tokenzinho que a gente vai gerar pra gente pegar no callback lá depois, tá bom? Então, fechamos.
+Marco Franca: Boa.
+Eduardo Melo Maia: Eh, daí vou pular o dois e o três, né, porque a gente já falou. Eh, item quatro, preditor de categoria.
+Marco Franca: Uhum.
+Eduardo Melo Maia: A gente já falou sobre isso, né? Vai, vai disponibilizar o preditor de categoria para vocês.
+Marco Franca: Eu
+Eduardo Melo Maia: A gente tava vendo aqui que ele pode retornar até oito opções de lista. Não que ele sempre vai retornar oito, tá? Mas é um parâmetro. E aí a gente até chegou a discutir aqui se a gente deixaria isso fixo no código do nosso lado ou se deixaria isso um atributo do lado do app. Não sei se você tem alguma opinião. Podemos não ter opinião nenhuma também. Ah, devolve tudo aí e beleza, né?
+Marco Franca: acho que pode ser, se para vocês for for a mesma mesmo mesmo trabalho, vamos dizer, Assim, deixa com o parâmetro que aí a gente pode ajustar o app ali, não vai que vai que oito fica feio na tela, sei lá, alguma coisa assim, a gente pede menos, né?
+Eduardo Melo Maia: Entendi.
+ 
+ 
+00:53:36
+ 
+Eduardo Melo Maia: Entendi. Então beleza.
+Vitor Ozols: Tá, tenho só um detalhe aí sobre esse limite também, não é muito relevante, né? Mas a quantidade de categorias que o mercador devolve tem relação com o quão específico é o nome que tá sendo enviado, tá?
+Eduardo Melo Maia: Sim.
+Vitor Ozols: Quanto menos específico ele for, maior esse range de categorias.
+Marco Franca: E e nesse nesse caso ele devolve tipo assim a eh como se fosse categoria principal que que ele acha que é e as outras ou é tudo do mesmo nível? Vamos dizer no aqui, ó. É só uma lista mesmo.
+Vitor Ozols: É só uma uma lista mesmo. Ele traz as melhores correspondências. Eu acredito que ranqueado, tá?
+Eduardo Melo Maia: É, eu tenho essa impressão também que é ranqueado, mas não não garantimos isso.
+Marco Franca: Ah, foi ranqueado aí.
+Vitor Ozols: Eh, eh.
+Marco Franca: Não, tranquilo. Depois a gente vê.
+Eduardo Melo Maia: É, esse parâmetro, Marcão, deixando mais claro, ele é até, né? Então se eu posso retornar até oito, né, não significa que ele vai retornar oito toda hora.
+Marco Franca: Sim. Uhum.
+Eduardo Melo Maia: A gente até fez um teste que a gente passou lâmpada, aí veio acho que quatro categorias, né?
+ 
+ 
+00:54:29
+ 
+Eduardo Melo Maia: Aí a gente passou lâmpada, lógina, aí veio uma só.
+Marco Franca: Certo. Não. Ótimo. Excelente. Deixa comparar mesmo. Daí a gente vira do nosso lado.
+Eduardo Melo Maia: Tá bom? Tá beleza.
+Vitor Ozols: Tá.
+Eduardo Melo Maia: Então a gente deixa como parâmetro. Então beleza. Esse daí foi. Aí a outra atividade lá é o end point de categorias da plataforma. Isso daí eu ainda confesso que eu na minha cabeça ainda tá meio nebuloso assim se a gente eh faria isso, né?
+Marco Franca: É, esse não é da plataforma, tá? A gente precisa é do Mercado Livre.
+Eduardo Melo Maia: Ah, do Mercado Livre.
+Marco Franca: Isso. Uma busca de categorias do Mercado Livre por nome.
+Eduardo Melo Maia: Tá. De onde saiu isso daí? Os da plataforma.
+Vitor Ozols: Não, não, eu tinha imaginado o Mercado Livre mesmo, tá?
+Eduardo Melo Maia: Ah. Ah. Tá. escrevi errado, então.
+Vitor Ozols: É, foi mal, talvez tenha explicado errado também.
+Marco Franca: Mas esse aí a gente chama, se tiver dúvida do a gente chama o peu, né?
+Eduardo Melo Maia: Pera aí, é, eu vou bater com É, eu também não consigo editar, tá?
+ 
+ 
+00:55:25
+ 
+Marco Franca: Conversa junto. Acho que é uma boa até.
+Vitor Ozols: É esse aqui que a gente vai usar o aquele negócio do post lá que o Vlad falou. Eu acho que é o FTS.
+Marco Franca: É isso mesmo.
+Eduardo Melo Maia: Não, beleza.
+Marco Franca: He.
+Eduardo Melo Maia: Ah, o seis. É isso daí. E acho que o Elton falou alguma coisa com o Vlad ali. Eles mencionaram alguma implementação técnica que agora não vou lembrar, mas eu tô entendendo que a gente vai eh a gente vai disponibilizar o end point que diz se tá conectado ou não, né?
+Marco Franca: Ah, é, vamos precisar disso aí, sim.
+Eduardo Melo Maia: Tá beleza?
+Marco Franca: Uhum.
+Eduardo Melo Maia: Eh, o E aí o PT de publicação de anúncio, né, de de fato, né?
+Marco Franca: Uhum.
+Eduardo Melo Maia: Quando tiver tudo certinho, vocês vão mandar o produto pra gente.
+Marco Franca: Sim. Sim. Uhum.
+Eduardo Melo Maia: E aí tem uma situação ali que são os atributos obrigatórios, que é uma devolutiva que a gente tem que dar ali se acontecer, tipo, se tiver alguma eh um atributo obrigatório, né? Algum atributo que não foi ali na no anúncio. Aí eu fiquei na dúvida daí de forma geral se isso são coisas separadas ou não.
+ 
+ 
+00:56:35
+ 
+Eduardo Melo Maia: É uma coisa só. é um end point de de publicação de anúncio que já vai devolver isso e daí a aplicação se vira lá. Eh, ou se a gente tem que fazer um separado ou se a gente tem que fazer mais um para acrescentar depois os atributos adicionados.
+Marco Franca: É isso.
+Vitor Ozols: Угуm.
+Marco Franca: É, são é são dois, né? Um um que quando a gente tentava publicar, se o Mercado Livre retornar algum erro, a gente precisa que esse erro seja retornado para nós, né? Que são eh o próprio Mercado Livre, né?
+Eduardo Melo Maia: Ja.
+Marco Franca: osó a que já retorna, né, quais são os obrigatórios que não foram, alguma coisa assim, né, já no próprio chamada. E o outro, por exemplo, nesse daí a gente chamou para cadastrar um produto, aí ele falou: "Ah, pô, o a cor do produto é obrigatória para essa categoria é obrigatório mandar a cor. Aí a gente depois que a gente arrumar isso aí passou, a gente vai mandar um end para vocês falando, ó, inclua nessa lista de de atributos da categoria cor como obrigatória, tipo assim, um um atributo para eh um end point para atualizar a base de vocês aí, né? Esse foi a ideia do Israel.
+Luciano Mercer: Ô Edu, lembra aquele aquele processo que acho que vocês vão criar de qualquer forma, que é para atualizar o banco de da engenharia, né?
+ 
+ 
+00:57:49
+ 
+Luciano Mercer: para poder ficar sempre atualizado com os dados que tem na no Mercado Livre, certo?
+Eduardo Melo Maia: Sim, sim, sim.
+Luciano Mercer: Aí a gente tinha comentado lá, talvez a gente fazer um acesso para verificar, para pedir para vocês atualizarem, porque tinha pode ter campos novos, pode ter atributos novos, pode ter valores dos atributos novos ou obrigatoriedade dos campos também.
+Marco Franca: é esse.
+Luciano Mercer: Nesse processo aí, o que o Marcano tá dizendo que a gente vai precisar acessar isso para falar assim: "Cara, ó, esse campo aqui é um um campo obrigatório, é um campo novo que eles estão pedindo e que por algum motivo ainda não foi atualizado pelo pelo betzinho de vocês, alguma coisa assim, entendeu?
+Eduardo Melo Maia: Entendi. Aí isso do isso daí vai ser algo amarrado com a categoria.
+Marco Franca: Qual categoria?
+Luciano Mercer: Pode ser isso.
+Marco Franca: Atributos de uma determinada categoria.
+Eduardo Melo Maia: tá para terminar da categoria do Mercado Livre.
+Luciano Mercer: Isso.
+Marco Franca: É.
+Luciano Mercer: Só que daí a gente já vai ter o dado na mão, né?
+Eduardo Melo Maia: Entendido.
+Luciano Mercer: Da a gente pode simplesmente eh atualizar o dado, o o banco de vocês porque a gente já tem isso na mão, né? Não precisa vocês fazerem todo o processo, né?
+Marco Franca: Eu tô sentindo falta de um aí do eh que eu acho que a gente vai precisar.
+ 
+ 
+00:58:46
+ 
+Luciano Mercer: Mas aí é discutível, né?
+Eduardo Melo Maia: Ah, tá bom. É, isso a gente vai precisar detalhar um pouquinho também, né?
+Luciano Mercer: Uhum.
+Eduardo Melo Maia: Entendi. Então tem um tem, então tem um oito, né, que é o, deixa eu só anotar aqui, ó.
+Marco Franca: Ah, aham.
+Eduardo Melo Maia: Point para eh sinalizar ou atualizar. Atualizar atributo. Atualizar atributo obrigatório na categoria. É isso, né?
+Marco Franca: Isso seria o nono, que é eh eu ainda não sei como é que a gente vai fazer, tá?
+Eduardo Melo Maia: E aí você falou que você tinha falta de um, que seria o nono.
+Marco Franca: Mas é, a gente precisa assim, por exemplo, dado uma lista de produtos do nosso lado, a gente precisa saber qual deles tá anunciado já no Mercado Livre e qual não está.
+Eduardo Melo Maia: Tá.
+Marco Franca: Basicamente, qual está, né?
+Eduardo Melo Maia: Ah, você precisa a partir de uma lista.
+Vitor Ozols: Pode repetir.
+Marco Franca: É, eu vou, eu não sei se eu vou passar para vocês uma lista já toda e vocês me dizem qual que, qual que está no Mercado Livre já ou se a gente vai fazer alguma coisa diferente. Mas o fato é que a gente precisa de uma, na busca de produtos, a gente precisa saber qual deles já está no Mercado Livre.
+ 
+ 
+01:00:09
+ 
+Eduardo Melo Maia: Tá bom, entendi. Então são fazer, eu tô fazendo uma listinha final aqui, ó.
+Marco Franca: Tem coisa, né?
+Eduardo Melo Maia: É coisa, né? Aí o próximo passo que da não sei com vocês, chama mais gente, mas é só assim, quais as datas que vocês estão esperando cada um desses caras aqui e a e a prioridade
+Marco Franca: É, a gente ainda não é, a gente ainda não estimou nem o nosso lado ainda, mas a prioridade é o o número um é o autenticação aí.
+Gabriel Ferreira: How you
+Marco Franca: Autenticação. Essa é a prioridade um.
+Eduardo Melo Maia: É sim.
+Marco Franca: E a prioridade dois, deixa eu ver.
+Luciano Mercer: é tudo referente à autenticação, né? E depois a parte do preditor, que é o primeiro passo, né?
+Marco Franca: Isso.
+Eduardo Melo Maia: Mas se quiser apresentar de novo aí o eu refiz ali a a lista.
+Vitor Ozols: Perí.
+Eduardo Melo Maia: Eu mostro aqui. Ah, most esses carinhos aí.
+Luciano Mercer: É isso aí. Fechou.
+Eduardo Melo Maia: Não, beleza, gente. Era só isso. Eu queria trocar a figurinha com vocês.
+Marco Franca: Show de bola.
+Luciano Mercer: Nove itens, bastante coisa, né?
+Eduardo Melo Maia: Então, eh, à medida que a gente for definindo, aí a gente manda lá naquele grupo do CDC lá, el fala assim, ó, end point tá pronto, tá aqui a os atributos dele, a chamada e tudo.
+ 
+ 
+01:02:02
+ 
+Eduardo Melo Maia: Ah, isso aqui tá pronta a definição, tá aqui.
+Marco Franca: Beleza, combinado.
+Eduardo Melo Maia: Beleza. Olha, era isso, gente.
+Marco Franca: Uhum.
+Eduardo Melo Maia: Você vocês têm mais alguma coisa que vocês queriam trocar ideia?
+Marco Franca: Do nosso lado não, Edu. Acho que por enquanto estamos estamos alinhados.
+Eduardo Melo Maia: Beleza, valeu então gente, obrigado pela pela ajuda aí.
+Marco Franca: Obrigado, pessoal.
+Eduardo Melo Maia: Abraços.
+Gabriel Ferreira: Да.
+Vitor Ozols: Valeu, pessoal. Obrigadão, hein? Falou.
+Eduardo Melo Maia: Eh, oxe, ninguém tem ideia de data ainda. Eu tô com medo agora.
+Vitor Ozols: É, então,
+Eduardo Melo Maia: É que assim, ó, se a gente for olhar só pro nosso, eh, e minha preocupação não é só com o nosso, eh, corre, a gente vai correr com item 1, dois e três. Eh, não minto.
+Vitor Ozols: Uhum.
+Eduardo Melo Maia: Pera aí, pensar direito aqui.
+Vitor Ozols: E a gente não tem a conta de serviço ainda, uma conta da CWS, na verdade.
+Eduardo Melo Maia: Ah, ó. Se a gente for pensar só no nosso, que a gente tem que fazer é o seguinte, ó. Isso aqui seria uma macroatividade. É, a é que a tr não é nossa, tá? Eu só preciso comunicar alguém, é preciso passar o abacaxi.
+Vitor Ozols: Угу.
+Eduardo Melo Maia: Eh, mas esse um e dois aqui a gente tem que paralelizar com esse aqui, ó, o quatro e o cinco, entendeu?
+Vitor Ozols: Угу.
+Eduardo Melo Maia: Então, alguém tem que do time aqui, né?
+Vitor Ozols: Угу.
+Eduardo Melo Maia: Tipo, os vendo um e dois, Perireira vem desses esse quatro e cinco aqui, ó.
+Vitor Ozols: Beleza.
+Eduardo Melo Maia: É, pensando na na ordem, né? Aí quem acabar primeiro aí met aqui seria tentar paralelizar esses grupinhos aqui.
+Gabriel Ferreira: Ah.
+Eduardo Melo Maia: Aí conforme for acabando, aí vai vai descendo a lista. Isso aqui faz sentido dúvidas?
+Vitor Ozols: Pô, M.
+Eduardo Melo Maia: Tá.
+ 
+ 
+A transcrição foi encerrada após 01:04:25
+
+
+Esta transcrição editável foi gerada por computador e pode conter erros. As pessoas também podem alterar o texto depois que ele for criado.

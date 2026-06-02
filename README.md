@@ -12,7 +12,8 @@ Python TUI to explore S3 in a commander-style layout, focused on navigation plus
   - JSON / JSONL / NDJSON
   - Parquet
   - images (PNG, JPG, JPEG, GIF, BMP, WEBP, TIFF) up to 400x400
-  - text files (txt, log, md, etc.)
+  - rendered Markdown (MD, Markdown, MDOWN, MKDN)
+  - text files (txt, log, etc.)
 - Download to `./downloads/<bucket>/<key>`
 - Delete for files and directories
 - Create directories

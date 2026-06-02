@@ -255,13 +255,23 @@ DataTable:focus .datatable--cursor {
   text-style: bold;
 }
 
-#preview {
+#preview,
+#preview_markdown {
   height: 1fr;
-  color: #c3e88d;
   background: #0f141b;
   border: none;
   overflow-y: auto;
   overflow-x: auto;
+}
+
+#preview {
+  color: #c3e88d;
+}
+
+#preview_markdown {
+  display: none;
+  color: #d4d4d4;
+  padding: 0 1;
 }
 
 #preview_table {

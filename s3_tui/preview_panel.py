@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 
-from s3_tui.preview import build_preview, build_table_preview, is_image_file
+from s3_tui.preview import build_preview, build_table_preview, is_image_file, is_markdown_file
 
 try:
     from PIL import Image as PILImage
@@ -23,17 +23,34 @@ class PreviewMixin:
     def _log(self, message: str) -> None:
         self._preview().write(message)
 
+    def _set_preview_title(self, title: str) -> None:
+        self._preview_title().update(title)
+
     def _show_log_preview(self) -> None:
         self._preview_table().display = False
+        self._preview_markdown().display = False
         self._preview().display = True
 
     def _show_table_preview(self) -> None:
         self._preview().display = False
+        self._preview_markdown().display = False
         self._preview_table().display = True
+
+    def _show_markdown_preview(self) -> None:
+        self._preview().display = False
+        self._preview_table().display = False
+        self._preview_markdown().display = True
 
     def _preview_widget(self):
         table = self._preview_table()
-        return table if table.display else self._preview()
+        if table.display:
+            return table
+
+        markdown = self._preview_markdown()
+        if markdown.display:
+            return markdown
+
+        return self._preview()
 
     def _scroll_preview_horizontal(self, delta: int) -> None:
         widget = self._preview_widget()
@@ -43,7 +60,12 @@ class PreviewMixin:
         if self.left.bucket is None or entry.kind != "file":
             return
 
+        preview_path = f"s3://{self.left.bucket}/{entry.key}"
+        self._set_preview_title(f"Preview: {preview_path}")
+
         if entry.size > 25 * 1024 * 1024:
+            self._show_log_preview()
+            self._preview().clear()
             self._log(f"Preview blocked: large file ({self._human_size(entry.size)}).")
             return
 
@@ -52,7 +74,6 @@ class PreviewMixin:
             if is_image_file(entry.name):
                 self._show_log_preview()
                 self._preview().clear()
-                self._log(f"Preview: s3://{self.left.bucket}/{entry.key}")
                 self._render_image_preview(content)
                 return
 
@@ -72,14 +93,20 @@ class PreviewMixin:
                     table.zebra_stripes = True
                 self._show_table_preview()
                 table.move_cursor(row=0, column=0)
+            elif is_markdown_file(entry.name):
+                markdown = build_preview(entry.name, content)
+                markdown_view = self._preview_markdown()
+                markdown_view.update(markdown)
+                markdown_view.scroll_home(animate=False)
+                self._show_markdown_preview()
             else:
                 text = build_preview(entry.name, content)
                 self._preview().clear()
                 self._show_log_preview()
-                self._log(f"Preview: s3://{self.left.bucket}/{entry.key}")
                 self._log(text)
         except Exception as error:
             self._show_log_preview()
+            self._preview().clear()
             self._log(f"Preview failed: {error}")
 
     def _render_image_preview(self, content: bytes) -> None:

@@ -6,7 +6,16 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
 from textual.events import MouseScrollDown, MouseScrollUp
-from textual.widgets import Button, DataTable, Footer, Header, Input, RichLog, Static
+from textual.widgets import (
+    Button,
+    DataTable,
+    Footer,
+    Header,
+    Input,
+    Markdown,
+    RichLog,
+    Static,
+)
 
 from s3_tui.explorer import ExplorerMixin
 from s3_tui.models import PaneState
@@ -69,6 +78,7 @@ class S3TUI(ExplorerMixin, PreviewMixin, App[None]):
             with Container(id="preview_wrap"):
                 yield Static("Preview", id="preview_title")
                 yield DataTable(id="preview_table", cursor_type="cell")
+                yield Markdown("", id="preview_markdown", open_links=False)
                 yield RichLog(id="preview", wrap=False, markup=False, auto_scroll=False)
         yield Footer()
 
@@ -111,6 +121,12 @@ class S3TUI(ExplorerMixin, PreviewMixin, App[None]):
 
     def _preview_table(self) -> DataTable:
         return self.query_one("#preview_table", DataTable)
+
+    def _preview_markdown(self) -> Markdown:
+        return self.query_one("#preview_markdown", Markdown)
+
+    def _preview_title(self) -> Static:
+        return self.query_one("#preview_title", Static)
 
     def on_mouse_scroll_up(self, event: MouseScrollUp) -> None:
         if event.shift:

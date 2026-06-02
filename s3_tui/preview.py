@@ -7,9 +7,15 @@ from pathlib import Path
 import pandas as pd
 
 
+MARKDOWN_EXTENSIONS = {
+    ".md",
+    ".markdown",
+    ".mdown",
+    ".mkdn",
+}
+
 TEXT_EXTENSIONS = {
     ".txt",
-    ".md",
     ".log",
     ".yml",
     ".yaml",
@@ -22,7 +28,7 @@ TEXT_EXTENSIONS = {
     ".ts",
     ".html",
     ".css",
-}
+} | MARKDOWN_EXTENSIONS
 
 IMAGE_EXTENSIONS = {
     ".png",
@@ -38,6 +44,10 @@ IMAGE_EXTENSIONS = {
 
 def is_image_file(filename: str) -> bool:
     return Path(filename).suffix.lower() in IMAGE_EXTENSIONS
+
+
+def is_markdown_file(filename: str) -> bool:
+    return Path(filename).suffix.lower() in MARKDOWN_EXTENSIONS
 
 
 def _df_preview(df: pd.DataFrame, max_rows: int = 500) -> str:
