@@ -36,6 +36,24 @@ poetry install
 poetry run s3tui
 ```
 
+## Run with Docker
+
+You can also run `s3-tui` inside a Docker container using Docker Compose. This ensures all dependencies are isolated and it automatically maps your local AWS credentials.
+
+### Prerequisites
+- Docker and Docker Compose installed.
+- AWS credentials configured locally in `~/.aws`.
+
+### Running the container
+
+Since `s3-tui` is an interactive terminal UI, you must run it with interactive tty flags enabled. Run the following command in your terminal:
+
+```bash
+docker compose run --rm s3-tui
+```
+
+This command will build the image (if not already built) and launch the TUI seamlessly. Any downloaded files will be saved into the `./downloads` folder on your host machine.
+
 ## Shortcuts
 
 - Search field (top-left): filters in real time

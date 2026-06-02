@@ -1,0 +1,28 @@
+services:
+  s3-tui:
+    build: .
+    container_name: s3-tui
+    # --- Configurações CRÍTICAS para TUIs no Docker ---
+    stdin_open: true # Equivalente ao -i (interactive) do docker run
+    tty: true        # Equivalente ao -t (pseudo-tty) do docker run
+    # --------------------------------------------------
+    environment:
+      # Repassa as variáveis de ambiente AWS da sua máquina host (se existirem)
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+      # Repassa o tipo de terminal para não quebrar as cores do Textual
+      - TERM=xterm-256color 
+    volumes:
+      # Mapeia as credenciais locais da AWS (perfil default ou configurado)
+      - ~/.aws:/root/.aws:ro
+      
+      # Mapeia a pasta de downloads para que os arquivos baixados pelo TUI
+      # apareçam no seu sistema de arquivos host e não se percam.
+      - ./downloads:/app/downloads
+      
+      # (Opcional) Mapeia uma pasta do seu PC para dentro do container 
+      # para facilitar quando você for testar a funcionalidade de "Upload".
+      - .:/workspace:ro
